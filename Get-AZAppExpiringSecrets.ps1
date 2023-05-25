@@ -1,4 +1,5 @@
 
+# @amoranio
 
 <#
 
@@ -96,20 +97,20 @@ function Get-ServicePrincipalSecretExpiry($secret, $expiryThreshold) {
 }
 
 
-function Get-ExpiringServicePrincipalSecrets($accessToken, $expiryThreshold = 6, $groupid) { #change this back to 6 
+function Get-ExpiringServicePrincipalSecrets($accessToken, $expiryThreshold = 3, $groupid) {
     $expiringSecrets = @()
 
     $servicePrincipals = Get-ServicePrincipalsFromGroup -accessToken $accessToken -groupId $groupid
 
     foreach ($servicePrincipal in $servicePrincipals) {
-        Write-Host "This is what is doing: $($servicePrincipal.id)"
+        Write-Host "[*] Checking ServicePrincipal: $($servicePrincipal.id)"
         ############
 
         $appclientID = Get-ApplicationFromServicePrincipal -accessToken $accessToken -servicePrincipalId $servicePrincipal.id
 
         ## need to get the objectID rather than the appID
         $applicationID = Get-ApplicationObjectId -accessToken $accessToken -clientId $appclientID
-        Write-Host "AppID: $($applicationID)"
+        Write-Host "[*] Releated AppID: $($applicationID)"
 
         ##############
         $secrets = Get-ApplicationSecrets -accessToken $accessToken -appId $applicationID
@@ -157,12 +158,41 @@ $groupid = Get-AutomationVariable -Name "XYZ"
 #>
 
 
+$logo = '
 
-Write-Output "[*] Getting AccessToken..."
+    ad8888888888ba
+    dP`         `"8b,
+    8  ,aaa,       "Y888a     ,aaaa,     ,aaa,  ,aa,
+    8  8` `8           "88baadP""""YbaaadP"""YbdP""Yb
+    8  8   8              """        """      ""    8b
+    8  8, ,8         ,aaaaaaaaaaaaaaaaaaaaaaaaddddd88P
+    8  `"""`       ,d8""
+    Yb,         ,ad8"    @amoranio - Monitor Service Principal Secrets
+    "Y8888888888P"
+
+
+ '
+
+ Write-Output $logo
+
+Write-Output "[*] Getting AccessToken..." 
 $accessToken = Get-AccessToken -tenantId $tenantId -SPClientId $SPClientId -SPClientSecret $SPClientSecret
 
 $expiringSecrets = Get-ExpiringServicePrincipalSecrets -accessToken $accessToken -groupid $groupid
 
 # Output the expiring secrets
-$expiringSecrets | Format-Table
+Write-Output ""
 
+if ($expiringSecrets){
+
+    Write-Output "[!] Secrets Found To Be Expiring"
+    $expiringSecrets | Format-Table
+
+} else {
+
+    Write-Output "[/] No Secrets Expring Within The Next 3 Months"
+}
+
+Write-Output ""
+
+#### End
